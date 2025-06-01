@@ -38,7 +38,9 @@
     "react-native-screens": "~4.10.0",
     "react-native-themis": "file:./thirdparty/react-native-themis",
     "react-native-web": "~0.20.0",
-    "react-native-webview": "13.13.5"
+    "react-native-webview": "13.13.5",
+    "wasm-themis": "^0.15.0",
+    "expo-asset": "~11.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
@@ -47,5 +49,18 @@
     "eslint-config-expo": "~9.2.0",
     "typescript": "~5.8.3"
   },
-  "private": true
+  "private": true,
+  "browser": {
+    "crypto": false,
+    "fs": false,
+    "http": false,
+    "https": false,
+    "net": false,
+    "path": false,
+    "stream": false,
+    "tls": false,
+    "util": false,
+    "url": false,
+    "zlib": false
+  }
 }
