@@ -9,6 +9,7 @@ import { Subject } from 'rxjs';
 import { CheckpointType, RxTodoDocument, RxTodoCollections } from './types';
 import { replicateRxCollection } from 'rxdb/plugins/replication';
 import { RxTodoDocumentType } from './TodoSchema';
+import { RealtimeChannel } from '@supabase/realtime-js';
 
 const SUPABASE_TOKEN =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
@@ -19,12 +20,25 @@ export const todoCollectionName = 'todos';
 export async function startReplication(
     database: RxDatabase<RxTodoCollections>
 ) {
-    const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN, {});
+    const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN);
     const pullStream$ = new Subject<
         RxReplicationPullStreamItem<RxTodoDocument, CheckpointType>
     >();
-    supabase
-        .channel('realtime')
+
+    console.log("Starting replication...");
+
+    try {
+    // Create a broadcast channel for realtime updates
+    const channel = supabase.channel('todos-broadcast', {
+        config: {
+            broadcast: {
+                self: true, // Receive your own broadcasts
+            },
+        },
+    });
+
+    // Subscribe to changes
+    channel
         .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'todos' },
@@ -41,14 +55,24 @@ export async function startReplication(
                 });
             }
         )
-        .subscribe((status: string) => {
-            console.log('STATUS changed');
-            console.dir(status);
+        .subscribe((status: string, err?: Error) => {
+            console.log('STATUS changed:', status);
             if (status === 'SUBSCRIBED') {
                 pullStream$.next('RESYNC');
+            } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                console.log('Channel closed or error, attempting to reconnect...');
+                if (err) {
+                    console.error('Channel error:', err);
+                }
+                // The channel will automatically attempt to reconnect
             }
         });
+    } catch (error) {
+        console.error('Failed to start replication:', error);
+    }
 
+    console.log("Continuing replication...");
+    try {
     const replicationState = await replicateRxCollection<
         RxTodoDocumentType,
         CheckpointType
@@ -167,6 +191,12 @@ export async function startReplication(
         console.dir(err);
     });
 
+    console.log("Replication state successfully configured");
     return replicationState;
+
+    } catch (error) {
+        console.error('Failed to replicate:', error);
+    }
+    return null;
 }
 

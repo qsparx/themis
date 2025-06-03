@@ -7,4 +7,20 @@ config.resolver.assetExts.push(
   'wasm'
 );
 
+config.resolver.extraNodeModules = {
+  ...config.resolver.extraNodeModules,
+  process: require.resolve('process/browser'),
+};
+
+config.transformer = {
+  ...config.transformer,
+  // Needed for global injection (optional if you're doing it manually)
+  getTransformOptions: async () => ({
+    transform: {
+      experimentalImportSupport: false,
+      inlineRequires: false,
+    },
+  }),
+};
+
 module.exports = config;

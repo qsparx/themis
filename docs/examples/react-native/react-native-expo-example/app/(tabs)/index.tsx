@@ -16,7 +16,16 @@ if (typeof global.crypto === 'undefined') {
 		}
     };
 }
+if (typeof global.process === 'undefined') {
+  global.process = {}
+}
+if (typeof global.process.nextTick === 'undefined') {
+  global.process.nextTick = (fn, ...args) => setTimeout(() => fn(...args));
+}
 
+if (typeof process === 'undefined' || typeof process.nextTick !== 'function') {
+  console.log("!!!!!!process is undefined");
+}
 
 import React, { useEffect, useState } from 'react';
 import {
@@ -44,6 +53,11 @@ import * as SQLite from 'expo-sqlite';
 
 import { getRxStorageAsyncStorage } from 'rxdb/plugins/storage-asyncstorage';
 
+import {
+  replicateWebRTC,
+  getConnectionHandlerSimplePeer,
+  SimplePeer
+} from 'rxdb/plugins/replication-webrtc';
 
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBUpdatePlugin);
@@ -52,7 +66,7 @@ addRxPlugin(RxDBAttachmentsPlugin);
 addRxPlugin(RxDBLeaderElectionPlugin);
 
 
-import { todoSchema } from '../../lib/TodoSchema';
+import { todoSchema, RxTodoDocumentType } from '../../lib/TodoSchema';
 import { conflictHandler } from '../../lib/conflict-handler';
 import { startReplication } from '../../lib/replication';
 
@@ -140,8 +154,28 @@ export default function HomeScreen() {
               });
           }
 
-          console.log("Starting replication:", db);
+          console.log("Starting replication:");
           await startReplication(db as any);
+
+          //webrtc replication
+          console.log("Starting webrtc replication:");
+          replicateWebRTC<RxTodoDocumentType, SimplePeer>({
+            collection: db[todoCollectionName],
+            connectionHandlerCreator: getConnectionHandlerSimplePeer({}),
+            topic: 'todos',
+            pull: {},
+            push: {},
+        }).then(replicationState => {
+            replicationState.error$.subscribe((err: any) => {
+                console.log('webrtc replication error:');
+                console.dir(err);
+            });
+            replicationState.peerStates$.subscribe(s => {
+                console.log('webrtc new peer states:');
+                console.dir(s);
+            });
+        });
+
         } catch (error) {
           console.error('Failed to fetch data:', error);
         } finally {
