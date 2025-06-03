@@ -35,6 +35,13 @@ import { replicateCouchDB } from 'rxdb/plugins/replication-couchdb'
 import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
 import { getRxStorageMemory } from 'rxdb/plugins/storage-memory';
 
+import { wrappedValidateAjvStorage } from 'rxdb/plugins/validate-ajv';
+import { getRxStorageSQLiteTrial, getSQLiteBasicsExpoSQLiteAsync } from 'rxdb/plugins/storage-sqlite';
+import * as SQLite from 'expo-sqlite';
+
+import { getRxStorageAsyncStorage } from 'rxdb/plugins/storage-asyncstorage';
+
+
 addRxPlugin(RxDBMigrationPlugin);
 addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
@@ -44,6 +51,14 @@ addRxPlugin(RxDBAttachmentsPlugin);
 import { TodoSchema } from '../../lib/TodoSchema';
 
 export const STORAGE = getRxStorageMemory();
+export const STORAGE_SQLITE = wrappedValidateAjvStorage({
+    storage: getRxStorageSQLiteTrial({
+        sqliteBasics: getSQLiteBasicsExpoSQLiteAsync(SQLite.openDatabaseAsync)
+    })
+});
+export const STORAGE_ASYNC = getRxStorageAsyncStorage();
+
+
 const dbName = 'todosreactdatabase';
 export const todoCollectionName = 'todo';
 
@@ -55,7 +70,7 @@ export default function HomeScreen() {
         try {
 			const db = await createRxDatabase({
 			    name: dbName,
-			    storage: STORAGE
+			    storage: STORAGE_ASYNC
 			});
 			await db.addCollections({
 			      [todoCollectionName]: {

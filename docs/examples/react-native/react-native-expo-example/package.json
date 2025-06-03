@@ -27,6 +27,7 @@
     "expo-linking": "~7.1.5",
     "expo-router": "~5.0.6",
     "expo-splash-screen": "~0.30.8",
+    "expo-sqlite": "15.2.10",
     "expo-status-bar": "~2.2.3",
     "expo-symbols": "~0.4.4",
     "expo-system-ui": "~5.0.7",
@@ -41,16 +42,18 @@
     "react-native-themis": "file:./thirdparty/react-native-themis",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "rxdb": "^16.13.0",
+    "rxdb": "file:./thirdparty/rxdb.tgz",
     "rxjs": "^7.8.2",
-    "wasm-themis": "^0.15.0"
+    "wasm-themis": "^0.15.0",
+    "@react-native-async-storage/async-storage": "2.1.2"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "@react-native-community/cli": "latest"
   },
   "private": true,
   "browser": {
@@ -65,5 +68,6 @@
     "util": false,
     "url": false,
     "zlib": false
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
