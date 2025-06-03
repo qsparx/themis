@@ -8,8 +8,84 @@ import { ThemedView } from '@/components/ThemedView';
 
 import ThemisCrypto from '../../lib/ThemisCrypto';
 
+import * as Crypto from 'expo-crypto';
+if (typeof global.crypto === 'undefined') {
+    global.crypto = {
+		subtle: {
+        	digest: Crypto.digest,
+		}
+    };
+}
+
+
+import React, { useEffect, useState } from 'react';
+import {
+    addRxPlugin,
+    createRxDatabase,
+    createBlob,
+    getBlobSize,
+    blobToBase64String
+} from 'rxdb';
+import fetch from 'cross-fetch';
+import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode';
+import { RxDBMigrationPlugin } from 'rxdb/plugins/migration-schema'
+import { RxDBUpdatePlugin } from 'rxdb/plugins/update'
+import { RxDBQueryBuilderPlugin } from 'rxdb/plugins/query-builder'
+import { replicateCouchDB } from 'rxdb/plugins/replication-couchdb'
+import { RxDBAttachmentsPlugin } from 'rxdb/plugins/attachments';
+import { getRxStorageMemory } from 'rxdb/plugins/storage-memory';
+
+addRxPlugin(RxDBMigrationPlugin);
+addRxPlugin(RxDBUpdatePlugin);
+addRxPlugin(RxDBQueryBuilderPlugin);
+addRxPlugin(RxDBAttachmentsPlugin);
+
+
+import { TodoSchema } from '../../lib/TodoSchema';
+
+export const STORAGE = getRxStorageMemory();
+const dbName = 'todosreactdatabase';
+export const todoCollectionName = 'todo';
+
 export default function HomeScreen() {
-	
+
+    useEffect(() => {
+      // Define async function inside useEffect
+      const fetchData = async () => {
+        try {
+			const db = await createRxDatabase({
+			    name: dbName,
+			    storage: STORAGE
+			});
+			await db.addCollections({
+			      [todoCollectionName]: {
+			        schema: TodoSchema,
+			      },
+			    });
+			
+			  
+			if (db[todoCollectionName]) {
+			  await db[todoCollectionName].insert({
+			    id: `${Date.now()}`,
+			    title: 'Antibiotics',
+			    description: 'Bring Medicine from store',
+			    done: 'true',
+			  });
+				  
+	          await db[todoCollectionName].find().$.subscribe((todo: any) => {
+	            console.log("Got todo list:", todo);
+	          });
+	        }
+        } catch (error) {
+          console.error('Failed to fetch data:', error);
+        } finally {
+		  console.log("Rxdb loaded");
+        }
+      };
+
+      fetchData(); // Call the async function
+    }, []); 
+		
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}

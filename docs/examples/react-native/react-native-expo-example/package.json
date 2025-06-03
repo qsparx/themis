@@ -17,8 +17,10 @@
     "@react-navigation/native": "^7.1.6",
     "buffer": "^6.0.3",
     "expo": "~53.0.9",
+    "expo-asset": "~11.1.5",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.6",
+    "expo-crypto": "^14.1.4",
     "expo-font": "~13.3.1",
     "expo-haptics": "~14.1.4",
     "expo-image": "~2.1.7",
@@ -39,8 +41,9 @@
     "react-native-themis": "file:./thirdparty/react-native-themis",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
-    "wasm-themis": "^0.15.0",
-    "expo-asset": "~11.1.5"
+    "rxdb": "^16.13.0",
+    "rxjs": "^7.8.2",
+    "wasm-themis": "^0.15.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
