@@ -9,7 +9,7 @@ create table "public"."todos" (
 );
 
 
-CREATE UNIQUE INDEX todos_pkey ON public.todos USING btree (title);
+CREATE UNIQUE INDEX todos_pkey ON public.todos USING btree (id);
 
 alter table "public"."todos" add constraint "todos_pkey" PRIMARY KEY using index "todos_pkey";
 
