@@ -72,6 +72,9 @@ import { startReplication } from '../../lib/replication';
 
 import { Provider as RxDBProvider, useRxData } from 'rxdb-hooks';
 
+import { registerEvents, sendMessage } from '../../lib/replication';
+
+
 export const STORAGE = getRxStorageMemory();
 export const STORAGE_SQLITE = wrappedValidateAjvStorage({
     storage: getRxStorageSQLiteTrial({
@@ -86,6 +89,7 @@ export const STORAGE_ASYNC = wrappedValidateAjvStorage({
 
 const dbName = 'todosreactdatabase';
 export const todoCollectionName = 'todos';
+
 
 export default function HomeScreen() {
 
@@ -172,11 +176,13 @@ export default function HomeScreen() {
         await startReplication(db as any);
 
           //webrtc replication
-          /*
+          
           console.log("Starting webrtc replication:");
           replicateWebRTC<RxTodoDocumentType, SimplePeer>({
             collection: db[todoCollectionName],
-            connectionHandlerCreator: getConnectionHandlerSimplePeer({}),
+            connectionHandlerCreator: getConnectionHandlerSimplePeer({
+              signalingServerUrl: 'https://webrtc-signaling-server.onrender.com'
+            }),
             topic: 'todos',
             pull: {},
             push: {},
@@ -190,7 +196,7 @@ export default function HomeScreen() {
                 console.dir(s);
             });
         });
-        */
+        
 
         } catch (error) {
           console.error('Failed to fetch data:', error);
@@ -200,6 +206,19 @@ export default function HomeScreen() {
       };
 
       fetchData(); // Call the async function
+
+      const handleMessages = async () => {
+        try {
+          
+          await registerEvents();
+
+          await sendMessage("Hello from React Native");
+          
+        } catch (error) {
+          console.error('Failed to register events:', error);
+        }
+      };
+      //handleMessages();
     }, []); 
 		
   //<ThemisCrypto/>

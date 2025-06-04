@@ -4,12 +4,13 @@ import {
     RxDatabase,
     RxReplicationPullStreamItem,
     RxReplicationWriteToMasterRow,
+    WithDeletedAndAttachments
 } from 'rxdb';
 import { Subject } from 'rxjs';
 import { CheckpointType, RxTodoDocument, RxTodoCollections } from './types';
 import { replicateRxCollection } from 'rxdb/plugins/replication';
 import { RxTodoDocumentType } from './TodoSchema';
-import { RealtimeChannel } from '@supabase/realtime-js';
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/realtime-js';
 import { RxStorageAsyncStorage } from 'rxdb/plugins/storage-asyncstorage';
 
 const SUPABASE_TOKEN =
@@ -18,10 +19,46 @@ const SUPABASE_URL = 'http://127.0.0.1:54321';
 
 export const todoCollectionName = 'todos';
 
+export async function registerEvents() {
+    console.log("registerEvents");
+    const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN);
+    // Join a room/topic. Can be anything except for 'realtime'.
+  const myChannel = supabase.channel('test-channel')
+
+  // Simple function to log any messages we receive
+  function messageReceived(payload) {
+    console.log("messageReceived:", payload);
+  }
+  // Subscribe to the Channel
+  myChannel
+    .on(
+      'broadcast',
+      { event: 'shout' }, // Listen for "shout". Can be "*" to listen to all events
+      (payload) => messageReceived(payload)
+    )
+    .subscribe()
+  
+}
+
+export async function sendMessage(message: string) {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN);
+    console.log("Sending message:", message);
+
+    const myChannel = supabase.channel('test-channel');
+    const res = await myChannel.send({
+        type: 'broadcast',
+        event: 'shout',
+        payload: { message: 'Hello from React Native!' }
+    });
+    console.log("sendMessage response:", res);
+}
+
 export async function startReplication(
     database: RxDatabase<RxTodoCollections>
 ) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN);
+    await registerEvents(supabase);
+    
     const pullStream$ = new Subject<
         RxReplicationPullStreamItem<RxTodoDocument, CheckpointType>
     >();
@@ -30,13 +67,16 @@ export async function startReplication(
 
     try {
     // Create a broadcast channel for realtime updates
-    const channel = supabase.channel('todos-broadcast', {
+    const channel = supabase.channel('todos-broadcast');
+    /*
+    {
         config: {
             broadcast: {
                 self: false, // Receive your own broadcasts
             },
         },
-    });
+    }
+    */
 
     // Subscribe to changes
     channel
@@ -45,18 +85,22 @@ export async function startReplication(
             { event: '*', schema: 'public', table: 'todos' },
             (payload: any) => {
                 console.log('Change received!', payload);
-                const doc = payload.new as RxTodoDocumentType;
+                if (!payload.new) {
+                    console.log('No new data in payload');
+                    return;
+                }
+                const doc = payload.new;
 
                 pullStream$.next({
                     checkpoint: {
                         title: doc.title || '',
                         updatedAt: doc.updatedAt || 0,
                     },
-                    documents: [doc as any],
+                    documents: [doc],
                 });
             }
         )
-        .subscribe((status: string, err?: Error) => {
+        .subscribe((status: string) => {
             console.log('STATUS changed:', status);
             if (status === 'SUBSCRIBED') {
                 pullStream$.next('RESYNC');
