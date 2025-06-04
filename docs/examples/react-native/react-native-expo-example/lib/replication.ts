@@ -10,6 +10,7 @@ import { CheckpointType, RxTodoDocument, RxTodoCollections } from './types';
 import { replicateRxCollection } from 'rxdb/plugins/replication';
 import { RxTodoDocumentType } from './TodoSchema';
 import { RealtimeChannel } from '@supabase/realtime-js';
+import { RxStorageAsyncStorage } from 'rxdb/plugins/storage-asyncstorage';
 
 const SUPABASE_TOKEN =
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
@@ -18,7 +19,8 @@ const SUPABASE_URL = 'http://127.0.0.1:54321';
 export const todoCollectionName = 'todos';
 
 export async function startReplication(
-    database: RxDatabase<RxTodoCollections>
+    database: RxDatabase<RxTodoCollections>,
+    storage: RxStorageAsyncStorage
 ) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN);
     const pullStream$ = new Subject<
@@ -80,8 +82,12 @@ export async function startReplication(
         collection: database[todoCollectionName],
         replicationIdentifier: 'supabase-replication-to-' + SUPABASE_URL,
         deletedField: 'deleted',
+        closeDuplicates: true,
+        //storage: storage,
+        waitForLeadership: false, 
         pull: {
             async handler(lastCheckpoint, batchSize) {
+                console.log('# pull handler called');
                 const minTimestamp = lastCheckpoint
                     ? lastCheckpoint.updatedAt
                     : 0;

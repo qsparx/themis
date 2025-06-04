@@ -150,14 +150,15 @@ export default function HomeScreen() {
           }
             
           await db[todoCollectionName].find().$.subscribe((todo: any) => {
-                console.log("Got todo list:", todo);
+                console.log("Got todo list.", todo.length);
               });
           }
 
-          console.log("Starting replication:");
-          await startReplication(db as any);
+          console.log("Starting replication with supabase");
+          await startReplication(db as any, STORAGE_ASYNC);
 
           //webrtc replication
+          /*
           console.log("Starting webrtc replication:");
           replicateWebRTC<RxTodoDocumentType, SimplePeer>({
             collection: db[todoCollectionName],
@@ -175,6 +176,7 @@ export default function HomeScreen() {
                 console.dir(s);
             });
         });
+        */
 
         } catch (error) {
           console.error('Failed to fetch data:', error);
@@ -186,6 +188,7 @@ export default function HomeScreen() {
       fetchData(); // Call the async function
     }, []); 
 		
+  //<ThemisCrypto/>
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -195,7 +198,7 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
-	  <ThemisCrypto/>
+	  
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
