@@ -34,7 +34,7 @@ export async function startReplication(
     const channel = supabase.channel('todos-broadcast', {
         config: {
             broadcast: {
-                self: true, // Receive your own broadcasts
+                self: false, // Receive your own broadcasts
             },
         },
     });
