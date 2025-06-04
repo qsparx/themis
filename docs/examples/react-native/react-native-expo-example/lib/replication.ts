@@ -19,8 +19,7 @@ const SUPABASE_URL = 'http://127.0.0.1:54321';
 export const todoCollectionName = 'todos';
 
 export async function startReplication(
-    database: RxDatabase<RxTodoCollections>,
-    storage: RxStorageAsyncStorage
+    database: RxDatabase<RxTodoCollections>
 ) {
     const supabase = createClient(SUPABASE_URL, SUPABASE_TOKEN);
     const pullStream$ = new Subject<

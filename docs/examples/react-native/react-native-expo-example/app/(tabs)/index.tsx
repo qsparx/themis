@@ -70,6 +70,8 @@ import { todoSchema, RxTodoDocumentType } from '../../lib/TodoSchema';
 import { conflictHandler } from '../../lib/conflict-handler';
 import { startReplication } from '../../lib/replication';
 
+import { Provider as RxDBProvider, useRxData } from 'rxdb-hooks';
+
 export const STORAGE = getRxStorageMemory();
 export const STORAGE_SQLITE = wrappedValidateAjvStorage({
     storage: getRxStorageSQLiteTrial({
@@ -87,6 +89,12 @@ export const todoCollectionName = 'todos';
 
 export default function HomeScreen() {
 
+  const [db, setDb] = useState();
+  const [todos, setTodos] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  //const { data: todosData } = useRxData(db, todoCollectionName);
+
     useEffect(() => {
       // Define async function inside useEffect
       const fetchData = async () => {
@@ -96,6 +104,7 @@ export default function HomeScreen() {
             storage: STORAGE_ASYNC,
             multiInstance: true
         });
+        setDb(db);
         await db.addCollections({
               [todoCollectionName]: {
                 schema: todoSchema,
@@ -154,11 +163,13 @@ export default function HomeScreen() {
             
           await db[todoCollectionName].find().$.subscribe((todo: any) => {
                 console.log("Got todo list.", todo.length);
+                setTodos(todo);
+                setIsLoading(false);
               });
-          }
+        }
 
-          console.log("Starting replication with supabase");
-          await startReplication(db as any, STORAGE_ASYNC);
+        console.log("Starting replication with supabase");
+        await startReplication(db as any);
 
           //webrtc replication
           /*
@@ -207,35 +218,10 @@ export default function HomeScreen() {
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
+      {todos.map((todo: any) => (
+          <ThemedText key={todo.id}>{todo.title},{todo.title}</ThemedText>
+        ))}
+        {isLoading && <ThemedText>Loading...</ThemedText>}
       </ThemedView>
     </ParallaxScrollView>
   );

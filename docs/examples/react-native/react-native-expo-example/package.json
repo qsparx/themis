@@ -47,6 +47,7 @@
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
     "rxdb": "file:./thirdparty/rxdb.tgz",
+    "rxdb-hooks": "^5.0.2",
     "rxjs": "^7.8.2",
     "wasm-themis": "^0.15.0"
   },
