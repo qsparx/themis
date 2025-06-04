@@ -64,7 +64,7 @@ addRxPlugin(RxDBUpdatePlugin);
 addRxPlugin(RxDBQueryBuilderPlugin);
 addRxPlugin(RxDBAttachmentsPlugin);
 addRxPlugin(RxDBLeaderElectionPlugin);
-
+addRxPlugin(RxDBDevModePlugin);
 
 import { todoSchema, RxTodoDocumentType } from '../../lib/TodoSchema';
 import { conflictHandler } from '../../lib/conflict-handler';
@@ -76,7 +76,10 @@ export const STORAGE_SQLITE = wrappedValidateAjvStorage({
         sqliteBasics: getSQLiteBasicsExpoSQLiteAsync(SQLite.openDatabaseAsync)
     })
 });
-export const STORAGE_ASYNC = getRxStorageAsyncStorage();
+//export const STORAGE_ASYNC = getRxStorageAsyncStorage();
+export const STORAGE_ASYNC = wrappedValidateAjvStorage({
+  storage: getRxStorageAsyncStorage()
+});
 
 
 const dbName = 'todosreactdatabase';
@@ -142,7 +145,7 @@ export default function HomeScreen() {
             id: `${Date.now()}`,
             title: 'Antibiotics',
             description: 'Bring Medicine from store',
-            done: 'true',
+            done: true,
             updatedAt: new Date().getTime(),
           });
           } catch (error) {
